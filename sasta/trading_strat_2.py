@@ -1,13 +1,17 @@
 from trades import get_trades, get_csticks, get_closePriceNTime,get_bands
 import matplotlib.pyplot as plt
 import numpy
+import time
 def trade_long(t_entry,t_max,bands,budget,stoploss_percent):
+    print('Trade Entered at:',time.ctime(int(t_entry*0.001)))
+    
     buy_price=float((get_trades('BNBUSDT','1m',1,None,t_entry))[0][4])
     buy_quant=budget/buy_price
     stoploss_price=stoploss_percent/100*buy_price
     interval=60000
     t=t_entry+interval
-    i=0
+    
+    print("Entry price:",buy_price)
     while True:
         if int(t_max)-int(t)<=720*interval:
             cdata=get_trades('BNBUSDT','1m',(t_max-t)//interval)
@@ -20,13 +24,15 @@ def trade_long(t_entry,t_max,bands,budget,stoploss_percent):
                 t_exit=t
                 sp=cp
                 profit=(sp-buy_price)*buy_quant
-                print('Exit')
-                print(sp/buy_price)
+                print('Exit time:',time.ctime(int(t_exit*0.001)))
+                print('Exit Price:',sp)
+               
                 return profit,t_exit
             else:
                 t+=interval
+                print('Current price:',cp)
                    
-            print((t_max-t)//interval) 
+             
             if stoploss_percent*cp/100>stoploss_price:
                 stoploss_price=stoploss_percent*cp/100    
             if int(t)==int(t_max):
@@ -47,9 +53,9 @@ def trade_long(t_entry,t_max,bands,budget,stoploss_percent):
 
 
 
-def backtest_(budget=1000,stoploss_percent=95):
+def backtest_(budget=1000,stoploss_percent=95,limit=1000):
     
-    trade_data=get_trades('BNBUSDT','4h','1000',)
+    trade_data=get_trades('BNBUSDT','4h',str(limit))
     t_list,t_time=get_closePriceNTime(trade_data)
     bands = get_bands(t_list) 
     count1=0
@@ -81,17 +87,17 @@ def backtest_(budget=1000,stoploss_percent=95):
                     profit1_list.append(profit1)
                     if profit1>0:
                         trade_success1+=1
+                        print(profit1_list)
             else:
                 t+=interval
-                print(i)
-                print(t,t_max)
+                
                 #increment by 1 minute
                 i+=1   
             if t>t_max:
                 print(t,t_max)
                 break       
         
-        print(t,t_max)
+        
         if t>t_max:
             
             break
